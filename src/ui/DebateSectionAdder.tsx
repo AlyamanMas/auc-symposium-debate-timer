@@ -15,21 +15,7 @@ import {
   resetAllSections,
   resetState,
 } from "@/lib/store/debate-slice";
-
-const teams = [
-  {
-    value: "proposition",
-    label: "الموالاة",
-  },
-  {
-    value: "opposition",
-    label: "المعارضة",
-  },
-  {
-    value: "other",
-    label: "غير ذلك",
-  },
-];
+import teamsMapping from "@/lib/teamsMapping";
 
 export default function DebateSectionAdder() {
   const dispatch = useAppDispatch();
@@ -66,7 +52,7 @@ export default function DebateSectionAdder() {
           onChange={(e) => setTeam(e.target.value as Team)}
           select
         >
-          {teams.map((team) => (
+          {teamsMapping.map((team) => (
             <MenuItem key={team.value} value={team.value}>
               {team.label}
             </MenuItem>
