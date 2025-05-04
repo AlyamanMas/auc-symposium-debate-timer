@@ -99,6 +99,12 @@ const debateSlice = createSlice({
       state.isRunning = false;
     },
 
+    resetState: (state) => {
+      state.sections = [];
+      state.currentSectionId = null;
+      state.isRunning = false;
+    },
+
     reorderSections: (state, action: PayloadAction<string[]>) => {
       const orderedSections: DebateSection[] = [];
 
@@ -123,6 +129,7 @@ export const {
   pauseTimer,
   completeSection,
   resetAllSections,
+  resetState,
   reorderSections,
 } = debateSlice.actions;
 
