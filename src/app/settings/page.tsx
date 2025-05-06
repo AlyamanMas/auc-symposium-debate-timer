@@ -18,7 +18,9 @@ export default function Home() {
           <ThemeProvider theme={theme}>
             <TopAppBar />
             <Toolbar />
-            <Box sx={{ m: 4 }}>
+            <Box
+              sx={{ m: 4, display: "flex", flexDirection: "column", gap: 2 }}
+            >
               <DebateSectionAdder />
               <SettingsTable />
             </Box>

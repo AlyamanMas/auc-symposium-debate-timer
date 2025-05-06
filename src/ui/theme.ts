@@ -5,6 +5,10 @@ import rtlPlugin from "stylis-plugin-rtl";
 
 export const theme = createTheme({
   direction: "rtl",
+  typography: {
+    fontFamily: ["Roboto", "GE SS Two"].join(","),
+    fontWeightRegular: 300,
+  },
   components: {
     // Name of the component
     MuiTypography: {
@@ -12,7 +16,7 @@ export const theme = createTheme({
         // Name of the slot
         root: {
           // Some CSS
-          fontFamily: "GE SS Two",
+          fontFamily: "Roboto, GE SS Two",
         },
       },
     },
