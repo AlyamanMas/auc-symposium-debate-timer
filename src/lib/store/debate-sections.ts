@@ -1,10 +1,12 @@
 export type Team = "opposition" | "proposition" | "other";
+export type SectionStatus = "completed" | "started" | "not started";
+
 export type DebateSection = {
   id: string; // unique identifier for each section
   duration: number; // duration in seconds
   team: Team;
   name: string; // name of the section
-  status: "completed" | "started" | "not started";
+  status: SectionStatus;
 };
 
 export type DebateState = {
