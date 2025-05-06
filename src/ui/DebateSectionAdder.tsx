@@ -43,14 +43,15 @@ export default function DebateSectionAdder() {
           label="عنوان المقطع"
           value={name}
           onChange={(e) => setTitle(e.target.value)}
+          sx={{ flexGrow: 1 }}
         />
         <TextField
           id="team"
           label="الفريق"
-          sx={{ width: "10em" }}
           value={team}
           onChange={(e) => setTeam(e.target.value as Team)}
           select
+          sx={{ flexGrow: 2, minWidth: "7em" }}
         >
           {teamsMapping.map((team) => (
             <MenuItem key={team.value} value={team.value}>
@@ -64,6 +65,7 @@ export default function DebateSectionAdder() {
           type="number"
           value={duration}
           onChange={(e) => setDuration(Number(e.target.value))}
+          sx={{ flexGrow: 1 }}
         />
       </Box>
       <Box sx={{ display: "flex", gap: 2 }}>
