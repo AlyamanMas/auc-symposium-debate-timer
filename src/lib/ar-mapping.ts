@@ -1,3 +1,5 @@
+import { SectionStatus } from "./store/debate-sections";
+
 export const teamsMapping = [
   {
     value: "proposition",
@@ -12,3 +14,9 @@ export const teamsMapping = [
     label: "غير ذلك",
   },
 ];
+
+export const statusMapping: Record<SectionStatus, string> = {
+  completed: "انتهت",
+  started: "بدأت",
+  "not started": "لم تبدأ",
+};
