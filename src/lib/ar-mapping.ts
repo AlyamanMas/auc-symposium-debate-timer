@@ -1,4 +1,4 @@
-const teamsMapping = [
+export const teamsMapping = [
   {
     value: "proposition",
     label: "الموالاة",
@@ -12,5 +12,3 @@ const teamsMapping = [
     label: "غير ذلك",
   },
 ];
-
-export default teamsMapping;

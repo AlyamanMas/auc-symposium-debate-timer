@@ -15,7 +15,7 @@ import {
   resetAllSections,
   resetState,
 } from "@/lib/store/debate-slice";
-import teamsMapping from "@/lib/teamsMapping";
+import { teamsMapping } from "@/lib/ar-mapping";
 
 export default function DebateSectionAdder() {
   const dispatch = useAppDispatch();
