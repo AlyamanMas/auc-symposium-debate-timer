@@ -58,7 +58,6 @@ export default function DebateSectionAdder() {
             </MenuItem>
           ))}
         </TextField>
-        {/* TODO: change duration to times 60 */}
         <TextField
           id="duration"
           label="المدة (بالدقائق)"
@@ -75,7 +74,7 @@ export default function DebateSectionAdder() {
             handleAddSection({
               name: name,
               team: team,
-              duration: duration,
+              duration: duration * 60, // we multiply by 60 since the actual section duration is in seconds but here we get it in minutes
             })
           }
         >
