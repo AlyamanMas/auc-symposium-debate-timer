@@ -11,7 +11,9 @@
   #env.GREET = "devenv";
 
   # https://devenv.sh/packages/
-  packages = [ pkgs.git ];
+  packages = [
+    pkgs.git
+  ];
 
   # https://devenv.sh/languages/
   languages.javascript.enable = true;
