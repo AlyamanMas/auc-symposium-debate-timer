@@ -102,7 +102,7 @@ function TimerPage() {
       return <span className="text-white text-9xl font-bold">00:00</span>;
     } else {
       return (
-        <span className="text-white text-9xl font-bold font-mono">
+        <span className="text-white text-9xl font-bold">
           {String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}
         </span>
       );
@@ -113,11 +113,11 @@ function TimerPage() {
     <ThemeProvider theme={theme}>
       <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-600 relative overflow-hidden">
         {/* Rotating Globe Background */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-20">
+        <div className="absolute w-screen h-screen flex items-center justify-center opacity-20">
           <img
             src="/globe-bg.png"
             alt="Globe Background"
-            className="w-full h-full object-cover animate-spin"
+            className="h-3/2 object-cover animate-spin"
             style={{ animationDuration: "60s" }}
           />
         </div>
@@ -135,7 +135,7 @@ function TimerPage() {
           </div>
 
           {/* Timer Display */}
-          <div className="bg-white bg-opacity-10 backdrop-blur-lg rounded-3xl px-16 py-12 mb-12 border border-white border-opacity-20">
+          <div className="bg-sym-dark bg-opacity-10 backdrop-blur-lg rounded-3xl px-2 border border-white border-opacity-20">
             {currentSection ? (
               <Countdown
                 ref={countdownRef}
