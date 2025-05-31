@@ -117,6 +117,18 @@ const debateSlice = createSlice({
 
       state.sections = orderedSections;
     },
+
+    tickTimer: (state) => {
+      if (state.currentSectionId && state.isRunning) {
+        const currentSectionIndex = state.sections.findIndex(
+          (section) => section.id === state.currentSectionId
+        );
+
+        if (currentSectionIndex !== -1 && state.sections[currentSectionIndex].duration > 0) {
+          state.sections[currentSectionIndex].duration -= 1;
+        }
+      }
+    },
   },
 });
 
@@ -131,6 +143,7 @@ export const {
   resetAllSections,
   resetState,
   reorderSections,
+  tickTimer,
 } = debateSlice.actions;
 
 export default debateSlice.reducer;

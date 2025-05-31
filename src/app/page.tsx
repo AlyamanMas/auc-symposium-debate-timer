@@ -14,8 +14,8 @@ import {
   setCurrentSection,
   completeSection,
   updateSection,
+  tickTimer,
 } from "@/lib/store/debate-slice";
-import Countdown, { CountdownApi } from "react-countdown";
 import {
   PlayArrow,
   Pause,
@@ -39,9 +39,11 @@ function TimerPage() {
   const { sections, currentSectionId, isRunning } = useSelector(
     (state: RootState) => state.debate
   );
-  const countdownRef = useRef<CountdownApi | null>(null);
+  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const cursorTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [timeModifyDialogOpen, setTimeModifyDialogOpen] = useState(false);
   const [newTime, setNewTime] = useState("");
+  const [showButtons, setShowButtons] = useState(true);
 
   const currentSection = sections.find((s) => s.id === currentSectionId);
   const currentIndex = sections.findIndex((s) => s.id === currentSectionId);
@@ -53,17 +55,81 @@ function TimerPage() {
     }
   }, [currentSectionId, sections, dispatch]);
 
+  // Timer effect
+  useEffect(() => {
+    if (isRunning && currentSection) {
+      timerIntervalRef.current = setInterval(() => {
+        dispatch(tickTimer());
+      }, 1000);
+    } else {
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+        timerIntervalRef.current = null;
+      }
+    }
+
+    return () => {
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+      }
+    };
+  }, [isRunning, currentSection, dispatch]);
+
+  // Check if timer completed
+  useEffect(() => {
+    if (currentSection && currentSection.duration <= 0 && isRunning) {
+      dispatch(completeSection(currentSection.id));
+      if (currentIndex < sections.length - 1) {
+        dispatch(setCurrentSection(sections[currentIndex + 1].id));
+      }
+    }
+  }, [
+    currentSection?.duration,
+    isRunning,
+    currentSection,
+    currentIndex,
+    sections.length,
+    dispatch,
+  ]);
+
+  // Cursor activity tracking
+  useEffect(() => {
+    const handleMouseMove = () => {
+      setShowButtons(true);
+      if (cursorTimeoutRef.current) {
+        clearTimeout(cursorTimeoutRef.current);
+      }
+      cursorTimeoutRef.current = setTimeout(() => {
+        setShowButtons(false);
+      }, 2000);
+    };
+
+    const handleMouseLeave = () => {
+      setShowButtons(false);
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseleave", handleMouseLeave);
+
+    // Initial timeout
+    cursorTimeoutRef.current = setTimeout(() => {
+      setShowButtons(false);
+    }, 2000);
+
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseleave", handleMouseLeave);
+      if (cursorTimeoutRef.current) {
+        clearTimeout(cursorTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const handlePlayPause = () => {
     if (isRunning) {
       dispatch(pauseTimer());
-      if (countdownRef.current) {
-        countdownRef.current.pause();
-      }
     } else {
       dispatch(startTimer());
-      if (countdownRef.current) {
-        countdownRef.current.start();
-      }
     }
   };
 
@@ -79,13 +145,13 @@ function TimerPage() {
     }
   };
 
-  const handleCountdownComplete = () => {
-    if (currentSectionId) {
-      dispatch(completeSection(currentSectionId));
-      if (currentIndex < sections.length - 1) {
-        dispatch(setCurrentSection(sections[currentIndex + 1].id));
-      }
-    }
+  const formatTime = (totalSeconds: number) => {
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(
+      2,
+      "0"
+    )}`;
   };
 
   const handleTimeModify = () => {
@@ -116,30 +182,6 @@ function TimerPage() {
     setNewTime("");
   };
 
-  const renderer = ({
-    minutes,
-    seconds,
-    completed,
-  }: {
-    minutes: number;
-    seconds: number;
-    completed: boolean;
-  }) => {
-    if (completed) {
-      return (
-        <span className="text-white text-9xl font-bold tabular-nums">
-          00:00
-        </span>
-      );
-    } else {
-      return (
-        <span className="leading-none text-white text-9xl xl:text-[12rem] font-bold tabular-nums">
-          {String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}
-        </span>
-      );
-    }
-  };
-
   return (
     <ThemeProvider theme={theme}>
       <div className="min-h-screen bg-radial from-sym-grad-inner to-sym-grad-outer relative overflow-hidden">
@@ -153,22 +195,22 @@ function TimerPage() {
           />
         </div>
 
-        <TopAppBar />
+        <TopAppBar showButtons={showButtons} />
 
         {/* Main Content */}
         <div className="relative z-10 flex flex-col items-center justify-center min-h-[calc(100vh-64px)] px-8 mt-6">
           {/* Header Text */}
           <div className="text-center mb-8">
-            <p className="text-white xl:mb-10 font-[GE_SS_Two] text-3xl xl:text-4xl">
+            {/* <p className="text-white xl:mb-10 font-[GE_SS_Two] text-3xl xl:text-4xl">
               شراكات إقليمية من أجل السلام
-            </p>
+            </p> */}
             <h1 className="text-white text-3xl xl:text-4xl font-[GE_SS_Two]">
               {currentSection
                 ? teamsMapping.find((x) => x.value === currentSection.team)
                     ?.label
                 : "Team Name"}
             </h1>
-            <h1 className="text-white text-5xl xl:text-9xl font-bold">
+            <h1 className="text-white text-5xl xl:text-6xl font-bold font-[GE_SS_Two]">
               {currentSection ? currentSection.name : "Title of Debate Round"}
             </h1>
           </div>
@@ -179,23 +221,17 @@ function TimerPage() {
            rounded-3xl px-3
            border border-white border-opacity-20"
           >
-            {currentSection ? (
-              <Countdown
-                date={Date.now() + currentSection.duration * 1000}
-                autoStart={false}
-                controlled={false}
-                renderer={renderer}
-                onComplete={handleCountdownComplete}
-              />
-            ) : (
-              <span className="text-white text-9xl font-bold font-mono">
-                00:00
-              </span>
-            )}
+            <span className="leading-none text-white text-9xl xl:text-[12rem] font-bold tabular-nums">
+              {currentSection ? formatTime(currentSection.duration) : "00:00"}
+            </span>
           </div>
 
           {/* Control Buttons */}
-          <div className="flex gap-6 mt-6">
+          <div
+            className={`flex gap-6 mt-6 transition-opacity duration-300 ${
+              showButtons ? "opacity-100" : "opacity-0"
+            }`}
+          >
             <button
               onClick={handlePlayPause}
               disabled={!currentSection}

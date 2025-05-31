@@ -16,7 +16,11 @@ const theme = createTheme({
   },
 });
 
-export default function TopAppBar() {
+interface TopAppBarProps {
+  showButtons?: boolean;
+}
+
+export default function TopAppBar({ showButtons = true }: TopAppBarProps) {
   const pathname = usePathname();
   return (
     <Box sx={{ flexGrow: 1 }}>
@@ -29,29 +33,30 @@ export default function TopAppBar() {
                 size="large"
                 href={pathname === "/settings" ? "/" : "/settings"}
                 component={Link}
+                className={`transition-opacity duration-300 ${showButtons ? 'opacity-100' : 'opacity-0'}`}
               >
                 {pathname !== "/settings" ? <Settings /> : <Home />}
               </IconButton>
             </ThemeProvider>
           </div>
-          {/* TODO: remove if in settings */}
-          <div className="flex-1 grow-3">
-            <img
-              src="/symp-logo.png"
-              alt="Symposium Logo"
-              className="h-20 mt-2 mx-auto"
-            />
-          </div>
-          {/* <Typography variant="h5" component="div" sx={{ flexGrow: 1 }}>
-            ملتقى الجامعة الأمريكية بالقاهرة
-          </Typography> */}
-          <div className="flex-1">
-            <img
-              src="/dean-logo.png"
-              alt="Dean's Office Logo"
-              className="h-16 mt-2 mr-auto"
-            />
-          </div>
+          {pathname !== "/settings" && (
+            <>
+              <div className="flex-1 grow-3">
+                <img
+                  src="/symp-logo.png"
+                  alt="Symposium Logo"
+                  className="h-20 mt-2 mx-auto"
+                />
+              </div>
+              <div className="flex-1">
+                <img
+                  src="/dean-logo.png"
+                  alt="Dean's Office Logo"
+                  className="h-16 mt-2 mr-auto"
+                />
+              </div>
+            </>
+          )}
         </Toolbar>
       </AppBar>
     </Box>
