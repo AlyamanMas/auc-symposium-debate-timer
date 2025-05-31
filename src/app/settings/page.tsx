@@ -9,6 +9,7 @@ import SettingsTable from "@/ui/SettingsTable";
 import { Box, Toolbar } from "@mui/material";
 import DebateSectionAdder from "@/ui/DebateSectionAdder";
 import { CacheProvider } from "@emotion/react";
+import SectionSetup from "@/ui/SectionSetup";
 
 export default function Home() {
   return (
@@ -21,6 +22,7 @@ export default function Home() {
             <Box
               sx={{ m: 4, display: "flex", flexDirection: "column", gap: 2 }}
             >
+              <SectionSetup />
               <DebateSectionAdder />
               <SettingsTable />
             </Box>

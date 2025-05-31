@@ -9,10 +9,6 @@ export const teamsMapping = [
     value: "opposition",
     label: "المعارضة",
   },
-  {
-    value: "other",
-    label: "غير ذلك",
-  },
 ];
 
 export const statusMapping: Record<SectionStatus, string> = {
