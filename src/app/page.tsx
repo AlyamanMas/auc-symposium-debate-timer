@@ -312,7 +312,7 @@ function TimerPage() {
                 disabled={currentIndex <= 0}
                 className="bg-opacity-20 hover:bg-opacity-30 disabled:bg-opacity-10 backdrop-blur-lg rounded-full p-4 border border-white border-opacity-20 transition-all duration-200"
               >
-                <SkipPrevious className="text-white text-3xl" />
+                <SkipNext className="text-white text-3xl" />
               </button>
 
               <button
@@ -320,7 +320,7 @@ function TimerPage() {
                 disabled={currentIndex >= sections.length - 1}
                 className="bg-opacity-20 hover:bg-opacity-30 disabled:bg-opacity-10 backdrop-blur-lg rounded-full p-4 border border-white border-opacity-20 transition-all duration-200"
               >
-                <SkipNext className="text-white text-3xl" />
+                <SkipPrevious className="text-white text-3xl" />
               </button>
             </div>
           </div>
