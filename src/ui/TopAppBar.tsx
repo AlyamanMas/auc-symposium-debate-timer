@@ -22,6 +22,13 @@ interface TopAppBarProps {
 
 export default function TopAppBar({ showButtons = true }: TopAppBarProps) {
   const pathname = usePathname();
+
+  const handleHomeNavigation = () => {
+    if (pathname === "/settings") {
+      // Set counter to 1 when navigating from settings to home
+      sessionStorage.setItem("skipAnimationCounter", "1");
+    }
+  };
   return (
     <Box sx={{ flexGrow: 1 }}>
       <AppBar color="transparent" elevation={0}>
@@ -33,7 +40,10 @@ export default function TopAppBar({ showButtons = true }: TopAppBarProps) {
                 size="large"
                 href={pathname === "/settings" ? "/" : "/settings"}
                 component={Link}
-                className={`transition-opacity duration-300 ${showButtons ? 'opacity-100' : 'opacity-0'}`}
+                onClick={handleHomeNavigation}
+                className={`transition-opacity duration-300 ${
+                  showButtons ? "opacity-100" : "opacity-0"
+                }`}
               >
                 {pathname !== "/settings" ? <Settings /> : <Home />}
               </IconButton>

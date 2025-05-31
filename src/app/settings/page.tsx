@@ -10,7 +10,6 @@ import { Box, Toolbar } from "@mui/material";
 import DebateSectionAdder from "@/ui/DebateSectionAdder";
 import { CacheProvider } from "@emotion/react";
 
-// TODO: add button to reset app state in case something goes wrong
 export default function Home() {
   return (
     <Provider store={store}>

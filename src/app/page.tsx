@@ -8,6 +8,7 @@ import { PersistGate } from "redux-persist/integration/react";
 import { store, persistor } from "@/lib/store";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/lib/store";
+import { useRouter } from "next/navigation";
 import {
   startTimer,
   pauseTimer,
@@ -44,9 +45,26 @@ function TimerPage() {
   const [timeModifyDialogOpen, setTimeModifyDialogOpen] = useState(false);
   const [newTime, setNewTime] = useState("");
   const [showButtons, setShowButtons] = useState(true);
+  const [showStartingAnimation, setShowStartingAnimation] = useState(false);
+  const [showMainContent, setShowMainContent] = useState(false);
+  const [hasPlayedAnimation, setHasPlayedAnimation] = useState(false);
 
   const currentSection = sections.find((s) => s.id === currentSectionId);
   const currentIndex = sections.findIndex((s) => s.id === currentSectionId);
+
+  // Check if this is initial load or navigation
+  useEffect(() => {
+    const skipCounter = sessionStorage.getItem("skipAnimationCounter") || "0";
+
+    if (skipCounter === "0") {
+      // Play animation
+      setShowStartingAnimation(true);
+    } else {
+      // Skip animation and reset counter
+      setShowMainContent(true);
+      sessionStorage.setItem("skipAnimationCounter", "0");
+    }
+  }, []);
 
   // Auto-select first section if none is selected and sections exist
   useEffect(() => {
@@ -78,6 +96,10 @@ function TimerPage() {
   // Check if timer completed
   useEffect(() => {
     if (currentSection && currentSection.duration <= 0 && isRunning) {
+      // Play ding sound
+      const audio = new Audio("/ding.mp3");
+      audio.play().catch(console.error);
+
       dispatch(completeSection(currentSection.id));
       if (currentIndex < sections.length - 1) {
         dispatch(setCurrentSection(sections[currentIndex + 1].id));
@@ -154,6 +176,13 @@ function TimerPage() {
     )}`;
   };
 
+  const handleAnimationEnd = () => {
+    setShowMainContent(true);
+    setTimeout(() => {
+      setShowStartingAnimation(false);
+    }, 500); // Allow overlap for smooth transition
+  };
+
   const handleTimeModify = () => {
     setNewTime(
       currentSection ? Math.floor(currentSection.duration / 60).toString() : ""
@@ -185,125 +214,152 @@ function TimerPage() {
   return (
     <ThemeProvider theme={theme}>
       <div className="min-h-screen bg-radial from-sym-grad-inner to-sym-grad-outer relative overflow-hidden">
-        {/* Rotating Globe Background */}
-        <div className="absolute w-screen h-screen flex items-center justify-center opacity-20">
-          <img
-            src="/globe-bg.png"
-            alt="Globe Background"
-            className="h-3/2 object-cover animate-spin"
-            style={{ animationDuration: "90s" }}
-          />
-        </div>
-
-        <TopAppBar showButtons={showButtons} />
-
-        {/* Main Content */}
-        <div className="relative z-10 flex flex-col items-center justify-center min-h-[calc(100vh-64px)] px-8 mt-6">
-          {/* Header Text */}
-          <div className="text-center mb-8">
-            {/* <p className="text-white xl:mb-10 font-[GE_SS_Two] text-3xl xl:text-4xl">
-              شراكات إقليمية من أجل السلام
-            </p> */}
-            <h1 className="text-white text-3xl xl:text-4xl font-[GE_SS_Two]">
-              {currentSection
-                ? teamsMapping.find((x) => x.value === currentSection.team)
-                    ?.label
-                : "Team Name"}
-            </h1>
-            <h1 className="text-white text-5xl xl:text-6xl font-bold font-[GE_SS_Two]">
-              {currentSection ? currentSection.name : "Title of Debate Round"}
-            </h1>
-          </div>
-
-          {/* Timer Display */}
+        {/* Starting Animation Video */}
+        {showStartingAnimation && (
           <div
-            className="bg-radial from-sym-grad-inner to-sym-grad-outer
-           rounded-3xl px-3
-           border border-white border-opacity-20"
-          >
-            <span className="leading-none text-white text-9xl xl:text-[12rem] font-bold tabular-nums">
-              {currentSection ? formatTime(currentSection.duration) : "00:00"}
-            </span>
-          </div>
-
-          {/* Control Buttons */}
-          <div
-            className={`flex gap-6 mt-6 transition-opacity duration-300 ${
-              showButtons ? "opacity-100" : "opacity-0"
+            className={`fixed inset-0 z-50 bg-black flex items-center justify-center transition-opacity duration-500 ${
+              showStartingAnimation && !showMainContent
+                ? "opacity-100"
+                : "opacity-0"
             }`}
           >
-            <button
-              onClick={handlePlayPause}
-              disabled={!currentSection}
-              className="bg-opacity-20 hover:bg-opacity-30 disabled:bg-opacity-10 backdrop-blur-lg rounded-full p-4 border border-white border-opacity-20 transition-all duration-200"
+            <video
+              autoPlay
+              muted
+              onEnded={handleAnimationEnd}
+              className="w-full h-full object-cover"
             >
-              {isRunning ? (
-                <Pause className="text-white text-3xl" />
-              ) : (
-                <PlayArrow className="text-white text-3xl" />
-              )}
-            </button>
-
-            <button
-              onClick={handleTimeModify}
-              disabled={!currentSection}
-              className="bg-opacity-20 hover:bg-opacity-30 disabled:bg-opacity-10 backdrop-blur-lg rounded-full p-4 border border-white border-opacity-20 transition-all duration-200"
-            >
-              <Edit className="text-white text-3xl" />
-            </button>
-
-            <button
-              onClick={handlePrevious}
-              disabled={currentIndex <= 0}
-              className="bg-opacity-20 hover:bg-opacity-30 disabled:bg-opacity-10 backdrop-blur-lg rounded-full p-4 border border-white border-opacity-20 transition-all duration-200"
-            >
-              <SkipPrevious className="text-white text-3xl" />
-            </button>
-
-            <button
-              onClick={handleNext}
-              disabled={currentIndex >= sections.length - 1}
-              className="bg-opacity-20 hover:bg-opacity-30 disabled:bg-opacity-10 backdrop-blur-lg rounded-full p-4 border border-white border-opacity-20 transition-all duration-200"
-            >
-              <SkipNext className="text-white text-3xl" />
-            </button>
+              <source src="/starting-animation.mp4" type="video/mp4" />
+            </video>
           </div>
-        </div>
+        )}
 
-        {/* Time Modification Dialog */}
-        <Dialog
-          open={timeModifyDialogOpen}
-          onClose={handleTimeCancel}
-          PaperProps={{
-            style: {
-              backgroundColor: "rgba(255, 255, 255, 0.9)",
-              backdropFilter: "blur(10px)",
-            },
-          }}
+        {/* Main Content - Always rendered for performance */}
+        <div
+          className={`transition-opacity duration-500 ${
+            showMainContent ? "opacity-100" : "opacity-0"
+          }`}
         >
-          <DialogTitle>Modify Timer Duration</DialogTitle>
-          <DialogContent>
-            <TextField
-              autoFocus
-              margin="dense"
-              label="Duration (minutes)"
-              type="number"
-              fullWidth
-              variant="outlined"
-              value={newTime}
-              onChange={(e) => setNewTime(e.target.value)}
-              InputProps={{ inputProps: { min: 1 } }}
+          {/* Rotating Globe Background */}
+          <div className="absolute w-screen h-screen flex items-center justify-center opacity-20">
+            <img
+              src="/globe-bg.png"
+              alt="Globe Background"
+              className="h-3/2 object-cover animate-spin"
+              style={{ animationDuration: "90s" }}
             />
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleTimeCancel}>Cancel</Button>
-            <Button onClick={handleTimeUpdate} variant="contained">
-              Update
-            </Button>
-          </DialogActions>
-        </Dialog>
+          </div>
 
-        <BottomBar />
+          <TopAppBar showButtons={showButtons} />
+
+          {/* Main Content */}
+          <div className="relative z-10 flex flex-col items-center justify-center min-h-[calc(100vh-64px)] px-8 mt-6">
+            {/* Header Text */}
+            <div className="text-center mb-8">
+              {/* <p className="text-white xl:mb-10 font-[GE_SS_Two] text-3xl xl:text-4xl">
+              شراكات إقليمية من أجل السلام
+            </p> */}
+              <h1 className="text-white text-3xl xl:text-4xl font-[GE_SS_Two]">
+                {currentSection
+                  ? teamsMapping.find((x) => x.value === currentSection.team)
+                      ?.label
+                  : "Team Name"}
+              </h1>
+              <h1 className="text-white text-5xl xl:text-6xl font-bold font-[GE_SS_Two]">
+                {currentSection ? currentSection.name : "Title of Debate Round"}
+              </h1>
+            </div>
+
+            {/* Timer Display */}
+            <div
+              className="bg-radial from-sym-grad-inner to-sym-grad-outer
+           rounded-3xl px-3
+           border border-white border-opacity-20"
+            >
+              <span className="leading-none text-white text-9xl xl:text-[12rem] font-bold tabular-nums">
+                {currentSection ? formatTime(currentSection.duration) : "00:00"}
+              </span>
+            </div>
+
+            {/* Control Buttons */}
+            <div
+              className={`flex gap-6 mt-6 transition-opacity duration-300 ${
+                showButtons ? "opacity-100" : "opacity-0"
+              }`}
+            >
+              <button
+                onClick={handlePlayPause}
+                disabled={!currentSection}
+                className="bg-opacity-20 hover:bg-opacity-30 disabled:bg-opacity-10 backdrop-blur-lg rounded-full p-4 border border-white border-opacity-20 transition-all duration-200"
+              >
+                {isRunning ? (
+                  <Pause className="text-white text-3xl" />
+                ) : (
+                  <PlayArrow className="text-white text-3xl" />
+                )}
+              </button>
+
+              <button
+                onClick={handleTimeModify}
+                disabled={!currentSection}
+                className="bg-opacity-20 hover:bg-opacity-30 disabled:bg-opacity-10 backdrop-blur-lg rounded-full p-4 border border-white border-opacity-20 transition-all duration-200"
+              >
+                <Edit className="text-white text-3xl" />
+              </button>
+
+              <button
+                onClick={handlePrevious}
+                disabled={currentIndex <= 0}
+                className="bg-opacity-20 hover:bg-opacity-30 disabled:bg-opacity-10 backdrop-blur-lg rounded-full p-4 border border-white border-opacity-20 transition-all duration-200"
+              >
+                <SkipPrevious className="text-white text-3xl" />
+              </button>
+
+              <button
+                onClick={handleNext}
+                disabled={currentIndex >= sections.length - 1}
+                className="bg-opacity-20 hover:bg-opacity-30 disabled:bg-opacity-10 backdrop-blur-lg rounded-full p-4 border border-white border-opacity-20 transition-all duration-200"
+              >
+                <SkipNext className="text-white text-3xl" />
+              </button>
+            </div>
+          </div>
+
+          {/* Time Modification Dialog */}
+          <Dialog
+            open={timeModifyDialogOpen}
+            onClose={handleTimeCancel}
+            PaperProps={{
+              style: {
+                backgroundColor: "rgba(255, 255, 255, 0.9)",
+                backdropFilter: "blur(10px)",
+              },
+            }}
+          >
+            <DialogTitle>Modify Timer Duration</DialogTitle>
+            <DialogContent>
+              <TextField
+                autoFocus
+                margin="dense"
+                label="Duration (minutes)"
+                type="number"
+                fullWidth
+                variant="outlined"
+                value={newTime}
+                onChange={(e) => setNewTime(e.target.value)}
+                InputProps={{ inputProps: { min: 1 } }}
+              />
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={handleTimeCancel}>Cancel</Button>
+              <Button onClick={handleTimeUpdate} variant="contained">
+                Update
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          <BottomBar />
+        </div>
       </div>
     </ThemeProvider>
   );
