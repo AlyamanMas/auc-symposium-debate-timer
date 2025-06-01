@@ -265,7 +265,7 @@ function TimerPage() {
         {/* Starting Animation Video */}
         {showStartingAnimation && (
           <div
-            className={`fixed inset-0 z-50 bg-black flex items-center justify-center transition-opacity duration-500 ${
+            className={`fixed inset-0 z-50 bg-white flex items-center justify-center transition-opacity duration-500 ${
               showStartingAnimation && !showMainContent
                 ? "opacity-100"
                 : "opacity-0"
@@ -275,7 +275,7 @@ function TimerPage() {
               autoPlay
               muted
               onEnded={handleAnimationEnd}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-contain"
             >
               <source src="/starting-animation.mp4" type="video/mp4" />
             </video>
