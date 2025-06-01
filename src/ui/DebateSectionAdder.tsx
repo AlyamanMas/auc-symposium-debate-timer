@@ -14,7 +14,6 @@ import { teamsMapping } from "@/lib/ar-mapping";
 
 export default function DebateSectionAdder() {
   const dispatch = useAppDispatch();
-  const debate_state = useAppSelector((state) => state.debate);
   const [name, setTitle] = useState("");
   const [team, setTeam] = useState<Team>("proposition");
   const [duration, setDuration] = useState(0);

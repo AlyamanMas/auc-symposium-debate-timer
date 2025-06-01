@@ -75,6 +75,17 @@ const debateSlice = createSlice({
       }
     },
 
+    resetSectionDuration: (
+      state,
+      action: PayloadAction<DebateSection["id"]>
+    ) => {
+      state.isRunning = false;
+      let currentSection = state.sections.find((s) => s.id === action.payload);
+      if (currentSection) {
+        currentSection.duration = currentSection.originalDuration;
+      }
+    },
+
     pauseTimer: (state) => {
       state.isRunning = false;
     },
@@ -150,6 +161,7 @@ export const {
   resetState,
   reorderSections,
   tickTimer,
+  resetSectionDuration,
 } = debateSlice.actions;
 
 export default debateSlice.reducer;

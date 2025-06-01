@@ -2,13 +2,12 @@
 import { useState, useRef, useEffect } from "react";
 import TopAppBar from "@/ui/TopAppBar";
 import { ThemeProvider } from "@mui/material/styles";
-import { theme } from "@/ui/theme";
+import { theme, cacheRtl } from "@/ui/theme";
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 import { store, persistor } from "@/lib/store";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/lib/store";
-import { useRouter } from "next/navigation";
 import {
   startTimer,
   pauseTimer,
@@ -16,6 +15,7 @@ import {
   completeSection,
   updateSection,
   tickTimer,
+  resetSectionDuration,
 } from "@/lib/store/debate-slice";
 import {
   PlayArrow,
@@ -23,6 +23,7 @@ import {
   Edit,
   SkipPrevious,
   SkipNext,
+  History,
 } from "@mui/icons-material";
 import {
   Dialog,
@@ -34,6 +35,7 @@ import {
 } from "@mui/material";
 import BottomBar from "@/ui/BottomBar";
 import { teamsMapping } from "@/lib/ar-mapping";
+import { CacheProvider } from "@emotion/react";
 
 function TimerPage() {
   const dispatch = useDispatch();
@@ -106,17 +108,13 @@ function TimerPage() {
       audio.play().catch(console.error);
     }
     if (currentSection && currentSection.duration === 0 && isRunning) {
-      // Play ding sound three times
+      // Play ding sound twice
       const audio = new Audio("/ding.mp3");
       audio.play().catch(console.error);
       window.setTimeout(() => {
         const audio2 = new Audio("/ding.mp3");
         audio2.play().catch(console.error);
       }, 1.5 * 1000);
-      window.setTimeout(() => {
-        const audio3 = new Audio("/ding.mp3");
-        audio3.play().catch(console.error);
-      }, 3 * 1000);
     }
     if (
       currentSection &&
@@ -195,14 +193,32 @@ function TimerPage() {
   };
 
   const handlePrevious = () => {
+    if (currentSection && currentSection.id && currentSection.duration <= -15) {
+      dispatch(completeSection(currentSection.id));
+    }
+    if (isRunning) {
+      dispatch(pauseTimer());
+    }
     if (currentIndex > 0) {
       dispatch(setCurrentSection(sections[currentIndex - 1].id));
     }
   };
 
   const handleNext = () => {
+    if (currentSection && currentSection.id && currentSection.duration <= -15) {
+      dispatch(completeSection(currentSection.id));
+    }
+    if (isRunning) {
+      dispatch(pauseTimer());
+    }
     if (currentIndex < sections.length - 1) {
       dispatch(setCurrentSection(sections[currentIndex + 1].id));
+    }
+  };
+
+  const handleResetSectionDuration = () => {
+    if (currentSection && currentSection.id) {
+      dispatch(resetSectionDuration(currentSection.id));
     }
   };
 
@@ -268,7 +284,7 @@ function TimerPage() {
             className={`fixed inset-0 z-50 bg-white flex items-center justify-center transition-opacity duration-500 ${
               showStartingAnimation && !showMainContent
                 ? "opacity-100"
-                : "opacity-0"
+                : "hidden"
             }`}
           >
             <video
@@ -325,17 +341,14 @@ function TimerPage() {
           <div className="relative z-10 flex flex-col items-center justify-center min-h-[calc(100vh-64px)] px-8 mt-6">
             {/* Header Text */}
             <div className="text-center mb-8">
-              {/* <p className="text-white xl:mb-10 font-[GE_SS_Two] text-3xl xl:text-4xl">
-              شراكات إقليمية من أجل السلام
-            </p> */}
               <h1 className="text-white text-3xl xl:text-4xl font-[GE_SS_Two]">
                 {currentSection
                   ? teamsMapping.find((x) => x.value === currentSection.team)
                       ?.label
-                  : "Team Name"}
+                  : "اسم الفريق"}
               </h1>
               <h1 className="text-white text-5xl xl:text-6xl font-bold font-[GE_SS_Two]">
-                {currentSection ? currentSection.name : "Title of Debate Round"}
+                {currentSection ? currentSection.name : "عنوان جولة المناظرة"}
               </h1>
             </div>
 
@@ -369,6 +382,14 @@ function TimerPage() {
               </button>
 
               <button
+                onClick={handleResetSectionDuration}
+                disabled={!currentSection}
+                className="bg-opacity-20 hover:bg-opacity-30 disabled:bg-opacity-10 backdrop-blur-lg rounded-full p-4 border border-white border-opacity-20 transition-all duration-200"
+              >
+                <History className="text-white text-3xl" />
+              </button>
+
+              <button
                 onClick={handleTimeModify}
                 disabled={!currentSection}
                 className="bg-opacity-20 hover:bg-opacity-30 disabled:bg-opacity-10 backdrop-blur-lg rounded-full p-4 border border-white border-opacity-20 transition-all duration-200"
@@ -395,38 +416,43 @@ function TimerPage() {
           </div>
 
           {/* Time Modification Dialog */}
-          <Dialog
-            open={timeModifyDialogOpen}
-            onClose={handleTimeCancel}
-            slotProps={{
-              paper: {
-                style: {
-                  backgroundColor: "rgba(255, 255, 255, 0.9)",
-                  backdropFilter: "blur(10px)",
-                },
-              },
-            }}
-          >
-            <DialogTitle>Modify Timer Duration</DialogTitle>
-            <DialogContent>
-              <TextField
-                autoFocus
-                margin="dense"
-                label="Duration (minutes)"
-                type="number"
-                fullWidth
-                variant="outlined"
-                value={newTime}
-                onChange={(e) => setNewTime(e.target.value)}
-              />
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={handleTimeCancel}>Cancel</Button>
-              <Button onClick={handleTimeUpdate} variant="contained">
-                Update
-              </Button>
-            </DialogActions>
-          </Dialog>
+
+          <CacheProvider value={cacheRtl}>
+            <ThemeProvider theme={theme}>
+              <Dialog
+                open={timeModifyDialogOpen}
+                onClose={handleTimeCancel}
+                slotProps={{
+                  paper: {
+                    style: {
+                      backgroundColor: "rgba(255, 255, 255, 0.9)",
+                      backdropFilter: "blur(10px)",
+                    },
+                  },
+                }}
+              >
+                <DialogTitle>تعديل مدة المؤقت</DialogTitle>
+                <DialogContent>
+                  <TextField
+                    autoFocus
+                    margin="dense"
+                    label="المدة (بالدقائق)"
+                    type="number"
+                    fullWidth
+                    variant="outlined"
+                    value={newTime}
+                    onChange={(e) => setNewTime(e.target.value)}
+                  />
+                </DialogContent>
+                <DialogActions>
+                  <Button onClick={handleTimeCancel}>إلغاء </Button>
+                  <Button onClick={handleTimeUpdate} variant="contained">
+                    تحديث
+                  </Button>
+                </DialogActions>
+              </Dialog>
+            </ThemeProvider>
+          </CacheProvider>
 
           <BottomBar />
         </div>
