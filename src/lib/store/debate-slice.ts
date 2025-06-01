@@ -12,12 +12,15 @@ const debateSlice = createSlice({
   reducers: {
     addSection: (
       state,
-      action: PayloadAction<Omit<DebateSection, "id" | "status">>
+      action: PayloadAction<
+        Omit<DebateSection, "id" | "status" | "originalDuration">
+      >
     ) => {
       const newSection: DebateSection = {
         ...action.payload,
         id: uuidv4(),
         status: "not started",
+        originalDuration: action.payload.duration,
       };
       state.sections.push(newSection);
     },
@@ -124,7 +127,10 @@ const debateSlice = createSlice({
           (section) => section.id === state.currentSectionId
         );
 
-        if (currentSectionIndex !== -1 && state.sections[currentSectionIndex].duration > 0) {
+        if (
+          currentSectionIndex !== -1 &&
+          state.sections[currentSectionIndex].duration > -15
+        ) {
           state.sections[currentSectionIndex].duration -= 1;
         }
       }

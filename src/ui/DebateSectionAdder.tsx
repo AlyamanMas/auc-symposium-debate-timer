@@ -5,16 +5,11 @@ import {
   TextField,
   MenuItem,
   Button,
-  Select,
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@/lib/store/hooks";
-import { Dispatch, SetStateAction, useState } from "react";
+import { useState } from "react";
 import { DebateSection, Team } from "@/lib/store/debate-sections";
-import {
-  addSection,
-  resetAllSections,
-  resetState,
-} from "@/lib/store/debate-slice";
+import { addSection, resetState } from "@/lib/store/debate-slice";
 import { teamsMapping } from "@/lib/ar-mapping";
 
 export default function DebateSectionAdder() {
@@ -25,7 +20,7 @@ export default function DebateSectionAdder() {
   const [duration, setDuration] = useState(0);
 
   const handleAddSection = (
-    sectionInfo: Omit<DebateSection, "id" | "status">
+    sectionInfo: Omit<DebateSection, "id" | "status" | "originalDuration">
   ) => {
     dispatch(addSection(sectionInfo));
   };

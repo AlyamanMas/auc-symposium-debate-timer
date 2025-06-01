@@ -1,29 +1,17 @@
-import {
-  Paper,
-  Box,
-  Typography,
-  TextField,
-  MenuItem,
-  Button,
-  Select,
-} from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@/lib/store/hooks";
-import { Dispatch, SetStateAction, useState } from "react";
-import { DebateSection, Team } from "@/lib/store/debate-sections";
-import {
-  addSection,
-  resetAllSections,
-  resetState,
-} from "@/lib/store/debate-slice";
+import { Paper, Box, Typography, TextField, Button } from "@mui/material";
+import { useAppDispatch } from "@/lib/store/hooks";
+import { useState } from "react";
+import { DebateSection } from "@/lib/store/debate-sections";
+import { addSection, resetState } from "@/lib/store/debate-slice";
 
 export default function SectionSetup() {
   const dispatch = useAppDispatch();
   const [name, setTitle] = useState("");
-  const [team, setTeam] = useState<Team>("proposition");
-  const [duration, setDuration] = useState(0);
 
   const handleAddDebate = (sectionInfo: string) => {
-    let sectionsToBeAdded: Array<Omit<DebateSection, "id" | "status">> = [
+    let sectionsToBeAdded: Array<
+      Omit<DebateSection, "id" | "status" | "originalDuration">
+    > = [
       {
         name: sectionInfo,
         team: "proposition",

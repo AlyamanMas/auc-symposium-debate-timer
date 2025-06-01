@@ -41,6 +41,7 @@ function TimerPage() {
     (state: RootState) => state.debate
   );
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const timeOverDinIntervalgRef = useRef<NodeJS.Timeout | null>(null);
   const cursorTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [timeModifyDialogOpen, setTimeModifyDialogOpen] = useState(false);
   const [newTime, setNewTime] = useState("");
@@ -94,25 +95,60 @@ function TimerPage() {
   }, [isRunning, currentSection, dispatch]);
 
   // Check if timer completed
+  // TODO: check if type of section is not 5itab radd
   useEffect(() => {
-    if (currentSection && currentSection.duration <= 0 && isRunning) {
-      // Play ding sound
+    if (
+      currentSection &&
+      (currentSection.duration === 60 || currentSection.duration === 4 * 60) &&
+      isRunning
+    ) {
       const audio = new Audio("/ding.mp3");
       audio.play().catch(console.error);
+    }
+    if (currentSection && currentSection.duration === 0 && isRunning) {
+      // Play ding sound three times
+      const audio = new Audio("/ding.mp3");
+      audio.play().catch(console.error);
+      window.setTimeout(() => {
+        const audio2 = new Audio("/ding.mp3");
+        audio2.play().catch(console.error);
+      }, 1.5 * 1000);
+      window.setTimeout(() => {
+        const audio3 = new Audio("/ding.mp3");
+        audio3.play().catch(console.error);
+      }, 3 * 1000);
+    }
+    if (
+      currentSection &&
+      currentSection.duration <= -15 &&
+      currentSection.status !== "completed"
+    ) {
+      // Play ding sound
+      timeOverDinIntervalgRef.current = setInterval(() => {
+        const audio = new Audio("/ding.mp3");
+        audio.play().catch(console.error);
+      }, 1000);
 
-      dispatch(completeSection(currentSection.id));
-      if (currentIndex < sections.length - 1) {
-        dispatch(setCurrentSection(sections[currentIndex + 1].id));
+      // dispatch(completeSection(currentSection.id));
+      // if (currentIndex < sections.length - 1) {
+      //   dispatch(setCurrentSection(sections[currentIndex + 1].id));
+      // }
+    } else if (
+      currentSection &&
+      currentSection.duration <= -15 &&
+      currentSection.status === "completed"
+    ) {
+      if (timeOverDinIntervalgRef.current) {
+        clearInterval(timeOverDinIntervalgRef.current);
       }
     }
-  }, [
-    currentSection?.duration,
-    isRunning,
-    currentSection,
-    currentIndex,
-    sections.length,
-    dispatch,
-  ]);
+
+    return () => {
+      if (timeOverDinIntervalgRef.current) {
+        clearInterval(timeOverDinIntervalgRef.current);
+      }
+    };
+  }, [currentSection?.duration, isRunning, currentSection?.status]);
 
   // Cursor activity tracking
   useEffect(() => {
@@ -148,6 +184,9 @@ function TimerPage() {
   }, []);
 
   const handlePlayPause = () => {
+    if (currentSection && currentSection.id && currentSection.duration <= -15) {
+      dispatch(completeSection(currentSection.id));
+    }
     if (isRunning) {
       dispatch(pauseTimer());
     } else {
@@ -168,12 +207,21 @@ function TimerPage() {
   };
 
   const formatTime = (totalSeconds: number) => {
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(
-      2,
-      "0"
-    )}`;
+    if (totalSeconds >= 0) {
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(
+        2,
+        "0"
+      )}`;
+    } else {
+      const minutes = Math.floor(Math.abs(totalSeconds) / 60);
+      const seconds = Math.abs(totalSeconds) % 60;
+      return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(
+        2,
+        "0"
+      )}-`;
+    }
   };
 
   const handleAnimationEnd = () => {
@@ -252,6 +300,27 @@ function TimerPage() {
 
           <TopAppBar showButtons={showButtons} />
 
+          {/* Elapsed Time Display */}
+          <div className="absolute bottom-0 w-screen mb-4">
+            <div
+              className="bg-radial from-sym-grad-inner to-sym-grad-outer
+                rounded-3xl px-4 py-2 w-fit mx-auto 
+                border border-white border-opacity-20"
+            >
+              <p className="text-white font-[GE_SS_Two]">
+                الوقت المستغرق{" "}
+                <span className="font-sans tabular-nums">
+                  {currentSection
+                    ? formatTime(
+                        currentSection.originalDuration -
+                          currentSection.duration
+                      )
+                    : "00:00"}
+                </span>
+              </p>
+            </div>
+          </div>
+
           {/* Main Content */}
           <div className="relative z-10 flex flex-col items-center justify-center min-h-[calc(100vh-64px)] px-8 mt-6">
             {/* Header Text */}
@@ -329,10 +398,12 @@ function TimerPage() {
           <Dialog
             open={timeModifyDialogOpen}
             onClose={handleTimeCancel}
-            PaperProps={{
-              style: {
-                backgroundColor: "rgba(255, 255, 255, 0.9)",
-                backdropFilter: "blur(10px)",
+            slotProps={{
+              paper: {
+                style: {
+                  backgroundColor: "rgba(255, 255, 255, 0.9)",
+                  backdropFilter: "blur(10px)",
+                },
               },
             }}
           >
@@ -347,7 +418,6 @@ function TimerPage() {
                 variant="outlined"
                 value={newTime}
                 onChange={(e) => setNewTime(e.target.value)}
-                InputProps={{ inputProps: { min: 1 } }}
               />
             </DialogContent>
             <DialogActions>

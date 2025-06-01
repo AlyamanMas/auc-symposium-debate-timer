@@ -4,6 +4,7 @@ export type SectionStatus = "completed" | "started" | "not started";
 export type DebateSection = {
   id: string; // unique identifier for each section
   duration: number; // duration in seconds
+  originalDuration: number;
   team: Team;
   name: string; // name of the section
   status: SectionStatus;
